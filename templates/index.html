@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENTIO — Perceive. Learn. Protect.</title>
+    <style>
+        :root {
+            --bg: #0a0f1e;
+            --panel: #111827;
+            --border: #1f2937;
+            --text: #e2e8f0;
+            --text-dim: #94a3b8;
+            --accent: #00f0ff;
+            --accent-dim: #0891b2;
+            --danger: #ff3860;
+            --warning: #ffdd57;
+            --success: #23d160;
+            --info: #3b82f6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+        .header {
+            background: linear-gradient(180deg, rgba(0,240,255,0.05) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .brand h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--accent), var(--info));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .brand .tagline {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+        .status-pill {
+            background: rgba(35, 209, 96, 0.1);
+            color: var(--success);
+            border: 1px solid #15803d;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .tab-bar {
+            display: flex;
+            gap: 0.25rem;
+            padding: 0 2rem;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            padding: 0.875rem 1.25rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            background: rgba(0, 240, 255, 0.05);
+        }
+        .container { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+        .tab-panel { display: none; animation: fadeIn 0.3s ease; }
+        .tab-panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .subtitle { color: var(--text-dim); font-size: 0.875rem; margin-bottom: 1.5rem; }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .input-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.35rem;
+        }
+        .input-group input, .input-group select, .input-group textarea {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.6rem 0.875rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            min-width: 220px;
+            font-family: inherit;
+        }
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--accent-dim);
+            box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.08);
+        }
+        .btn {
+            background: var(--accent-dim);
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1.25rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn:hover { background: var(--accent); color: var(--bg); }
+        .btn.secondary { background: var(--border); color: var(--text); }
+        .btn.secondary:hover { background: #374151; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .results-area { margin-top: 1rem; min-height: 100px; }
+        .empty-state {
+            color: var(--text-dim);
+            font-style: italic;
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        .loading {
+            color: var(--accent);
+            text-align: center;
+            padding: 2rem;
+            font-family: monospace;
+        }
+        .risk-meter {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .risk-bar-bg {
+            flex: 1;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .risk-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .risk-score {
+            font-size: 1.5rem;
+            font-weight: 800;
+            font-family: monospace;
+        }
+        .cve-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .cve-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            border-left: 3px solid var(--warning);
+        }
+        .cve-card.critical { border-left-color: var(--danger); }
+        .cve-card.high { border-left-color: var(--warning); }
+        .cve-card.medium { border-left-color: var(--info); }
+        .cve-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .cve-id {
+            font-family: monospace;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .badge.kev { background: rgba(255, 56, 96, 0.15); color: var(--danger); }
+        .badge.epss-high { background: rgba(255, 221, 87, 0.15); color: var(--warning); }
+        .badge.cvss { background: rgba(59, 130, 246, 0.15); color: var(--info); }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        .data-table th {
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            color: var(--text-dim);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+        }
+        .data-table td {
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-dim);
+        }
+        .data-table tr:hover td { background: rgba(255,255,255,0.02); color: var(--text); }
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.4rem;
+        }
+        .status-indicator.running { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .status-indicator.idle { background: var(--text-dim); }
+        .fuzz-result {
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            border-left: 3px solid var(--border);
+        }
+        .fuzz-result.critical { background: rgba(255,56,96,0.08); border-left-color: var(--danger); }
+        .fuzz-result.high { background: rgba(255,221,87,0.08); border-left-color: var(--warning); }
+        .fuzz-result.medium { background: rgba(59,130,246,0.08); border-left-color: var(--info); }
+        .nexus-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .stat-num {
+            display: block;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--accent);
+            font-family: monospace;
+        }
+        .stat-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+        .finding-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--text-dim);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            transition: transform 0.15s;
+        }
+        .finding-card:hover { transform: translateX(4px); }
+        .finding-card.critical { border-left-color: var(--danger); }
+        .finding-card.high { border-left-color: var(--warning); }
+        .finding-card.medium { border-left-color: var(--info); }
+        .finding-header {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .finding-card h4 {
+            margin: 0 0 0.35rem 0;
+            color: var(--text);
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+        .finding-card p {
+            margin: 0.2rem 0;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        .recommendation {
+            background: rgba(0, 240, 255, 0.06);
+            border-radius: 4px;
+            padding: 0.5rem;
+            margin-top: 0.5rem !important;
+            color: var(--accent) !important;
+            font-size: 0.78rem !important;
+        }
+        .finding-actions {
+            margin-top: 0.75rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        .finding-actions button {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .finding-actions button:hover {
+            background: #334155;
+            border-color: var(--accent-dim);
+            color: var(--text);
+        }
+        .report-panel {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .report-severity { display: flex; gap: 1rem; margin: 1rem 0; }
+        .sev-box {
+            padding: 0.4rem 0.875rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .sev-box.critical { background: rgba(255,56,96,0.12); color: #fca5a5; }
+        .sev-box.high { background: rgba(255,221,87,0.12); color: #fdba74; }
+        .recommendations { list-style: none; padding: 0; }
+        .recommendations li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-dim);
+            font-size: 0.875rem;
+        }
+        .recommendations li:last-child { border-bottom: none; }
+        .recommendations li:before {
+            content: "→ ";
+            color: var(--accent);
+        }
+        .status-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: var(--bg);
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+        }
+        .status-badge.running { color: var(--accent); border-color: var(--accent-dim); }
+        .status-badge.alert { color: var(--danger); border-color: #be123c; animation: pulse 2s infinite; }
+        .status-badge.ok { color: var(--success); border-color: #15803d; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        .controls-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .alert-row {
+            padding: 0.6rem 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 0.4rem;
+            font-size: 0.85rem;
+            border-left: 3px solid var(--border);
+        }
+        .alert-row.critical { background: rgba(255,56,96,0.06); border-left-color: var(--danger); }
+        .alert-row.high { background: rgba(255,221,87,0.06); border-left-color: var(--warning); }
+        .alert-row.medium { background: rgba(59,130,246,0.06); border-left-color: var(--info); }
+        .endpoint-list { font-family: monospace; font-size: 0.8rem; width: 100%; min-height: 120px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="brand">
+            <div>
+                <h1>SENTIO</h1>
+                <div class="tagline">Perceive. Learn. Protect.</div>
+            </div>
+        </div>
+        <div class="status-pill" id="system-status">● SYSTEM ONLINE</div>
+    </div>
+
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab('phase1', this)">🔍 Phase 1: Scanner</button>
+        <button class="tab-btn" onclick="showTab('phase2', this)">📡 Phase 2: Monitor</button>
+        <button class="tab-btn" onclick="showTab('phase3', this)">💥 Phase 3: Fuzzer</button>
+        <button class="tab-btn" onclick="showTab('phase4', this)">🧠 Phase 4: Nexus</button>
+    </div>
+
+    <div class="container">
+
+        <!-- PHASE 1 -->
+        <div id="phase1" class="tab-panel active">
+            <div class="section-title">🔍 Known Vulnerability Scanner</div>
+            <div class="subtitle">Query NVD, EPSS, and CISA KEV for real CVE intelligence</div>
+            <div class="card">
+                <div class="input-group">
+                    <div>
+                        <label>Target (IP, Host, or CIDR)</label>
+                        <input type="text" id="p1-target" placeholder="192.168.1.1 or example.com" style="min-width:300px;">
+                    </div>
+                    <button class="btn" onclick="runScan()">▶ Start Scan</button>
+                </div>
+                <div id="p1-results" class="results-area">
+                    <div class="empty-state">Enter a target and click Start Scan to begin Phase 1 reconnaissance.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PHASE 2 -->
+        <div id="phase2" class="tab-panel">
+            <div class="section-title">📡 Behavioral Monitor / Mos</div>
+            <div class="subtitle">Learn normal. Detect deviations. Spot unknown attacks.</div>
+            <div class="card">
+                <div class="input-group">
+                    <div>
+                        <label>Target Application URL</label>
+                        <input type="text" id="p2-target" value="http://127.0.0.1:5001" style="min-width:280px;">
+                    </div>
+                    <div>
+                        <label>Poll Interval (sec)</label>
+                        <input type="number" id="p2-interval" value="5" style="min-width:100px;">
+                    </div>
+                    <button class="btn" id="btn-mon-start" onclick="monitorStart()">▶ Start Monitor</button>
+                    <button class="btn secondary" id="btn-mon-stop" onclick="monitorStop()" disabled>⏹ Stop</button>
+                </div>
+                <div class="controls-row">
+                    <div class="status-badge" id="mon-status-badge"><span class="status-indicator idle"></span>Idle</div>
+                    <button class="btn secondary" onclick="computeBaseline()">📊 Compute Baseline</button>
+                    <button class="btn secondary" onclick="loadMetrics()">📈 View Metrics</button>
+                </div>
+                <div style="margin-top:1rem;">
+                    <label style="font-size:0.75rem;color:var(--text-dim);text-transform:uppercase;">Endpoints to Poll (JSON)</label>
+                    <textarea class="endpoint-list" id="p2-endpoints">[
+  {"path": "/api/health", "method": "GET"},
+  {"path": "/api/auth/login", "method": "POST", "payload": {"username": "admin", "password": "admin123"}},
+  {"path": "/api/auth/register", "method": "POST", "payload": {"username": "testuser", "password": "testpass"}},
+  {"path": "/api/search", "method": "POST", "payload": {"q": "test", "scope": "files"}},
+  {"path": "/api/metrics", "method": "GET"}
+]</textarea>
+                </div>
+            </div>
+            <div class="card">
+                <div id="p2-results" class="results-area">
+                    <div class="empty-state">Start monitoring, collect metrics, then compute baseline.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PHASE 3 -->
+        <div id="phase3" class="tab-panel">
+            <div class="section-title">💥 Fuzzing Engine / Fragilis</div>
+            <div class="subtitle">Proactively discover crashes, hangs, and unhandled exceptions</div>
+            <div class="card">
+                <div class="input-group">
+                    <div>
+                        <label>Target URL</label>
+                        <input type="text" id="p3-target" value="http://127.0.0.1:5001" style="min-width:280px;">
+                    </div>
+                    <div>
+                        <label>Max Payloads</label>
+                        <input type="number" id="p3-payloads" value="50" style="min-width:100px;">
+                    </div>
+                    <button class="btn" id="btn-fuzz" onclick="runFuzz()">▶ Start Fuzz Campaign</button>
+                </div>
+                <div class="controls-row">
+                    <div class="status-badge" id="fuzz-status-badge">Ready</div>
+                </div>
+                <div id="p3-results" class="results-area">
+                    <div class="empty-state">Configure target and click Start Fuzz Campaign.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PHASE 4 — SIMPLIFIED ONE-BUTTON -->
+        <div id="phase4" class="tab-panel">
+            <div class="section-title">🧠 Nexus — Threat Intelligence</div>
+            <div class="subtitle">One-button pipeline: Detect Anomalies → Correlate → Generate Report</div>
+
+            <div class="card">
+                <div class="controls-row">
+                    <button class="btn" id="btn-nexus-full" onclick="nexusFullAnalysis()">
+                        🧠 Generate Threat Intelligence
+                    </button>
+                    <div class="status-badge" id="nexus-status-badge">Ready</div>
+                </div>
+                <p style="font-size:0.8rem;color:var(--text-dim);margin-top:0.5rem;">
+                    This runs the full Phase 4 pipeline automatically: Detect Anomalies → Correlate with Fuzz Findings → Generate Report
+                </p>
+
+                <div class="nexus-stats">
+                    <div class="stat-card">
+                        <span class="stat-num" id="stat-campaigns">0</span>
+                        <span class="stat-label">Campaigns</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-num" id="stat-alerts">0</span>
+                        <span class="stat-label">Alerts Stored</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-num" id="stat-correlations">0</span>
+                        <span class="stat-label">Correlations</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-num" id="stat-open">0</span>
+                        <span class="stat-label">Open Findings</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title" style="font-size:1rem;">🔥 Open Correlation Findings</div>
+                <div id="nexus-findings-list" class="results-area">
+                    <div class="empty-state">Click "Generate Threat Intelligence" to discover linked threats.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title" style="font-size:1rem;">📋 Latest Threat Intelligence Report</div>
+                <div id="nexus-report" class="results-area">
+                    <div class="empty-state">Click "Generate Threat Intelligence" to see the report.</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // GLOBAL
+        function showTab(id, btn) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if (btn) btn.classList.add('active');
+            if (id === 'phase4') {
+                loadNexusStats();
+                loadNexusFindings();
+                fetch('/api/nexus/report').then(r => r.ok ? r.json() : null).then(d => d && renderNexusReport(d)).catch(()=>{});
+            }
+        }
+
+        // PHASE 1
+        async function runScan() {
+            const target = document.getElementById('p1-target').value.trim();
+            const results = document.getElementById('p1-results');
+            if (!target) { alert('Enter a target'); return; }
+            results.innerHTML = '<div class="loading">Scanning...</div>';
+            try {
+                const res = await fetch('/api/scan', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({target})
+                });
+                const data = await res.json();
+                if (data.error) { results.innerHTML = `<div class="empty-state" style="color:var(--danger)">Error: ${data.error}</div>`; return; }
+                renderScanResults(data);
+            } catch (e) {
+                results.innerHTML = `<div class="empty-state" style="color:var(--danger)">Scan failed: ${e.message}</div>`;
+            }
+        }
+
+        function renderScanResults(data) {
+            const container = document.getElementById('p1-results');
+            let riskColor = 'var(--success)'; let riskLabel = 'LOW';
+            const score = data.overall_risk_score || 0;
+            if (score >= 7) { riskColor = 'var(--danger)'; riskLabel = 'CRITICAL'; }
+            else if (score >= 4) { riskColor = 'var(--warning)'; riskLabel = 'HIGH'; }
+            else if (score >= 2) { riskColor = 'var(--info)'; riskLabel = 'MEDIUM'; }
+
+            let html = `
+                <div class="risk-meter">
+                    <span style="font-size:0.875rem;font-weight:600;">Risk Score</span>
+                    <div class="risk-bar-bg"><div class="risk-bar-fill" style="width:${Math.min(score*10,100)}%;background:${riskColor}"></div></div>
+                    <span class="risk-score" style="color:${riskColor}">${score.toFixed(1)}</span>
+                    <span class="badge" style="background:${riskColor}20;color:${riskColor}">${riskLabel}</span>
+                </div>
+                <div style="font-size:0.875rem;color:var(--text-dim);margin-bottom:0.5rem;">
+                    Target: <strong style="color:var(--text)">${data.target || 'unknown'}</strong> |
+                    Services: ${(data.services || []).length} |
+                    Vulnerabilities: ${(data.vulnerabilities || []).length}
+                </div>
+                <div class="cve-grid">
+            `;
+            const vulns = data.vulnerabilities || [];
+            if (!vulns.length) {
+                html += `<div class="empty-state" style="grid-column:1/-1;">No known vulnerabilities found.</div>`;
+            }
+            vulns.forEach(v => {
+                const sev = (v.severity || 'medium').toLowerCase();
+                html += `
+                    <div class="cve-card ${sev}">
+                        <div class="cve-header">
+                            <span class="cve-id">${v.cve_id || 'CVE-????'}</span>
+                            <div style="display:flex;gap:0.35rem;">
+                                ${v.in_kev ? '<span class="badge kev">KEV</span>' : ''}
+                                ${v.epss_score ? `<span class="badge epss-high">EPSS ${(v.epss_score*100).toFixed(1)}%</span>` : ''}
+                                <span class="badge cvss">CVSS ${v.cvss_score || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:0.5rem;">${v.description || 'No description.'}</p>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // PHASE 2
+        async function monitorStart() {
+            const target = document.getElementById('p2-target').value.trim();
+            const interval = parseFloat(document.getElementById('p2-interval').value) || 5;
+            let endpoints;
+            try { endpoints = JSON.parse(document.getElementById('p2-endpoints').value); }
+            catch (e) { alert('Invalid endpoints JSON'); return; }
+            document.getElementById('btn-mon-start').disabled = true;
+            document.getElementById('btn-mon-stop').disabled = false;
+            updateMonStatus('Starting...', 'running');
+            try {
+                const res = await fetch('/api/monitor/start', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({target_url: target, endpoints, interval})
+                });
+                const data = await res.json();
+                updateMonStatus(data.status === 'monitoring_started' ? 'Running' : 'Error', data.status === 'monitoring_started' ? 'ok' : 'alert');
+            } catch (e) {
+                updateMonStatus('Error', 'alert');
+                document.getElementById('btn-mon-start').disabled = false;
+            }
+        }
+
+        async function monitorStop() {
+            document.getElementById('btn-mon-stop').disabled = true;
+            try {
+                await fetch('/api/monitor/stop', {method: 'POST'});
+                updateMonStatus('Stopped', 'idle');
+            } catch (e) { updateMonStatus('Error stopping', 'alert'); }
+            document.getElementById('btn-mon-start').disabled = false;
+        }
+
+        function updateMonStatus(text, cls) {
+            const badge = document.getElementById('mon-status-badge');
+            const color = cls === 'ok' ? 'var(--success)' : (cls === 'alert' ? 'var(--danger)' : 'var(--text-dim)');
+            badge.innerHTML = `<span class="status-indicator ${cls === 'ok' || cls === 'running' ? 'running' : 'idle'}" style="background:${color};box-shadow:0 0 8px ${color}"></span>${text}`;
+            badge.className = 'status-badge ' + (cls === 'ok' || cls === 'running' ? 'running' : '');
+        }
+
+        async function computeBaseline() {
+            const results = document.getElementById('p2-results');
+            results.innerHTML = '<div class="loading">Computing baseline...</div>';
+            try {
+                const res = await fetch('/api/baseline/compute', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({minutes: 5})});
+                const data = await res.json();
+                if (data.error) { results.innerHTML = `<div class="empty-state" style="color:var(--danger)">${data.error}</div>`; return; }
+                let html = `<div style="margin-bottom:1rem;"><strong>Baseline Report #${data.report_id}</strong> — ${data.total_samples} samples across ${(data.endpoints || []).length} endpoints</div><table class="data-table"><thead><tr><th>Endpoint</th><th>Method</th><th>Samples</th><th>Latency Mean</th><th>Error Rate</th></tr></thead><tbody>`;
+                (data.endpoints || []).forEach(ep => {
+                    html += `<tr><td>${ep.endpoint}</td><td>${ep.method}</td><td>${ep.sample_count}</td><td>${ep.latency_mean}ms</td><td>${(ep.error_rate*100).toFixed(2)}%</td></tr>`;
+                });
+                html += '</tbody></table>';
+                results.innerHTML = html;
+            } catch (e) {
+                results.innerHTML = `<div class="empty-state" style="color:var(--danger)">Baseline error: ${e.message}</div>`;
+            }
+        }
+
+        async function loadMetrics() {
+            const results = document.getElementById('p2-results');
+            results.innerHTML = '<div class="loading">Fetching metrics...</div>';
+            try {
+                const res = await fetch('/api/monitor/metrics?minutes=60');
+                const data = await res.json();
+                if (!data.metrics || !data.metrics.length) { results.innerHTML = '<div class="empty-state">No metrics collected yet.</div>'; return; }
+                let html = `<div style="margin-bottom:0.5rem;"><strong>${data.count} Metrics</strong> (last 60 min)</div><table class="data-table"><thead><tr><th>Time</th><th>Endpoint</th><th>Status</th><th>Latency</th><th>Size</th></tr></thead><tbody>`;
+                data.metrics.slice(0, 50).forEach(m => {
+                    html += `<tr><td>${m.timestamp.slice(11,19)}</td><td>${m.endpoint}</td><td>${m.status_code}</td><td>${m.duration_ms}ms</td><td>${m.response_size}b</td></tr>`;
+                });
+                html += '</tbody></table>';
+                results.innerHTML = html;
+            } catch (e) {
+                results.innerHTML = `<div class="empty-state" style="color:var(--danger)">Metrics error: ${e.message}</div>`;
+            }
+        }
+
+        // PHASE 3
+        async function runFuzz() {
+            const target = document.getElementById('p3-target').value.trim();
+            const max = parseInt(document.getElementById('p3-payloads').value) || 50;
+            const results = document.getElementById('p3-results');
+            const badge = document.getElementById('fuzz-status-badge');
+            const btn = document.getElementById('btn-fuzz');
+            btn.disabled = true;
+            badge.textContent = 'Fuzzing...';
+            badge.className = 'status-badge running';
+            results.innerHTML = '<div class="loading">Deploying payloads...</div>';
+            try {
+                const res = await fetch('/api/fuzz/start', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({target_url: target, max_payloads: max})
+                });
+                const data = await res.json();
+                renderFuzzResults(data);
+                badge.textContent = `Done: ${data.total_payloads} payloads`;
+                badge.className = 'status-badge ok';
+            } catch (e) {
+                results.innerHTML = `<div class="empty-state" style="color:var(--danger)">Fuzz failed: ${e.message}</div>`;
+                badge.textContent = 'Error'; badge.className = 'status-badge alert';
+            } finally { btn.disabled = false; }
+        }
+
+        function renderFuzzResults(data) {
+            const container = document.getElementById('p3-results');
+            const results = data.results || [];
+            if (!results.length) { container.innerHTML = '<div class="empty-state">No results returned.</div>'; return; }
+            let html = `<div style="margin-bottom:1rem;font-size:0.875rem;">
+                Campaign <strong>#${data.campaign_id}</strong> |
+                Payloads: ${data.total_payloads} |
+                <span style="color:var(--danger)">Crashes: ${data.crashes}</span> |
+                <span style="color:var(--warning)">Hangs: ${data.hangs}</span> |
+                <span style="color:var(--info)">Errors: ${data.errors}</span>
+            </div>`;
+            const interesting = results.filter(r => r.severity !== 'info');
+            if (!interesting.length) {
+                html += '<div class="empty-state">All payloads returned normal responses.</div>';
+            } else {
+                interesting.forEach(r => {
+                    html += `<div class="fuzz-result ${r.severity}">
+                        <strong>${r.method} ${r.endpoint}</strong> — 
+                        <span class="badge ${r.severity}">${r.severity.toUpperCase()}</span> |
+                        Status: ${r.status_code} | Time: ${r.response_time_ms}ms<br>
+                        <span style="font-size:0.8rem;color:var(--text-dim);">${r.details}</span>
+                    </div>`;
+                });
+            }
+            container.innerHTML = html;
+        }
+
+        // PHASE 4 — ONE-BUTTON PIPELINE
+        async function nexusFullAnalysis() {
+            const badge = document.getElementById('nexus-status-badge');
+            const list = document.getElementById('nexus-findings-list');
+            const reportPanel = document.getElementById('nexus-report');
+            
+            badge.textContent = 'Analyzing...';
+            badge.className = 'status-badge running';
+            list.innerHTML = '<div class="loading">Detecting anomalies... correlating... generating report...</div>';
+            reportPanel.innerHTML = '';
+            
+            try {
+                const res = await fetch('/api/nexus/full-analysis', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({time_window_hours: 48})
+                });
+                const data = await res.json();
+                
+                if (data.error) {
+                    badge.textContent = 'Error';
+                    badge.className = 'status-badge alert';
+                    list.innerHTML = `<div class="empty-state" style="color:var(--danger)">${data.error}</div>`;
+                    return;
+                }
+                
+                badge.textContent = `${data.correlations_found} correlations found`;
+                badge.className = 'status-badge ' + (data.correlations_found > 0 ? 'alert' : 'ok');
+                
+                loadNexusFindings();
+                renderNexusReport(data.report);
+                loadNexusStats();
+                
+            } catch (e) {
+                badge.textContent = 'Error';
+                badge.className = 'status-badge alert';
+                list.innerHTML = '<div class="empty-state" style="color:var(--danger)">Analysis failed</div>';
+            }
+        }
+
+        async function loadNexusStats() {
+            try {
+                const res = await fetch('/api/nexus/status');
+                const data = await res.json();
+                document.getElementById('stat-campaigns').textContent = data.stats.campaigns_stored;
+                document.getElementById('stat-alerts').textContent = data.stats.alerts_stored;
+                document.getElementById('stat-correlations').textContent = data.stats.total_correlations;
+                document.getElementById('stat-open').textContent = data.stats.open_findings;
+            } catch (e) { console.error('Nexus stats error', e); }
+        }
+
+        async function loadNexusFindings() {
+            const list = document.getElementById('nexus-findings-list');
+            try {
+                const res = await fetch('/api/nexus/findings');
+                const data = await res.json();
+                if (!data.findings || !data.findings.length) {
+                    list.innerHTML = '<div class="empty-state">No open findings.</div>';
+                    return;
+                }
+                list.innerHTML = data.findings.map(f => `
+                    <div class="finding-card ${f.fuzz_severity}">
+                        <div class="finding-header">
+                            <span class="badge" style="background:rgba(0,240,255,0.12);color:var(--accent);">${f.correlation_confidence.toUpperCase()} CONFIDENCE</span>
+                            <span class="badge ${f.fuzz_severity}">${f.fuzz_severity.toUpperCase()}</span>
+                        </div>
+                        <h4>${f.method} ${f.endpoint}</h4>
+                        <p><strong style="color:var(--text)">Fuzz:</strong> ${f.fuzz_details}</p>
+                        <p><strong style="color:var(--text)">Anomaly:</strong> ${f.anomaly_type} (${f.anomaly_severity})</p>
+                        <p class="recommendation">💡 ${f.recommended_action}</p>
+                        <div class="finding-actions">
+                            <button onclick="updateFinding('${f.finding_id}', 'investigating')">🕵️ Investigate</button>
+                            <button onclick="updateFinding('${f.finding_id}', 'resolved')">✅ Resolve</button>
+                            <button onclick="updateFinding('${f.finding_id}', 'false_positive')">❌ False Positive</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                list.innerHTML = '<div class="empty-state" style="color:var(--danger)">Failed to load findings</div>';
+            }
+        }
+
+        function renderNexusReport(data) {
+            const panel = document.getElementById('nexus-report');
+            if (!data || data.error) {
+                panel.innerHTML = `<div class="empty-state">${data?.error || 'No report available'}</div>`;
+                return;
+            }
+            panel.innerHTML = `
+                <div class="report-header">
+                    <div>
+                        <div style="font-weight:700;color:var(--text);">Threat Intelligence Report #${data.report_id}</div>
+                        <div style="font-size:0.8rem;color:var(--text-dim);">${new Date(data.generated_at).toLocaleString()}</div>
+                    </div>
+                </div>
+                <div style="color:var(--text-dim);font-size:0.9rem;margin-bottom:0.75rem;">${data.summary}</div>
+                <div class="report-severity">
+                    <span class="sev-box critical">🔴 ${data.critical_count} Critical</span>
+                    <span class="sev-box high">🟠 ${data.high_count} High</span>
+                </div>
+                <ul class="recommendations">
+                    ${(data.recommendations || []).map(r => `<li>${r}</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        async function updateFinding(id, status) {
+            await fetch(`/api/nexus/finding/${id}/status`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({status})
+            });
+            loadNexusFindings();
+            loadNexusStats();
+        }
+
+        // Init
+        loadMonitorStatus();
+    </script>
+</body>
+</html>
